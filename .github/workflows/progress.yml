@@ -28,6 +28,8 @@ jobs:
 
       - name: Update PROGRESS.md
         run: python scripts/update_progress.py
+        env:
+          PROGRESS_FILTER_PATH: src   # ⬅ count only /src changes
 
       - name: Create PR
         id: cpr
