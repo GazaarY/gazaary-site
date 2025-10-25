@@ -168,7 +168,16 @@ export default function Header() {
         }
         html[data-hdr="light"] .hdr-link:hover { opacity: .9; text-decoration: underline; }
         html[data-hdr="dark"]  .hdr-link:hover  { color: rgb(17 24 39 / .80); text-decoration: underline; }
-        .hdr-link[aria-current="page"] { font-weight: 600; text-decoration: underline; }
+
+        /* Active state: no underline over hero, underline once header is solid */
+        html:not([data-header-solid="true"]) .hdr-link[aria-current="page"] { 
+          font-weight: 600; 
+          text-decoration: none; 
+        }
+        html[data-header-solid="true"] .hdr-link[aria-current="page"] { 
+          font-weight: 600; 
+          text-decoration: underline; 
+        }
       `}</style>
 
       {/* Transparent over hero, solid from Work down */}
