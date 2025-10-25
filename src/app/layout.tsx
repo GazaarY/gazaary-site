@@ -13,11 +13,12 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className="h-full scroll-pt-32 md:scroll-pt-36"
+      className="h-full" // keep simple; no scroll-pt needed if sections set their own offset
     >
       <body
         suppressHydrationWarning
-        className="min-h-screen bg-gy-canvas text-gy-900 antialiased"
+        className="min-h-screen text-gy-900 antialiased" 
+        // NOTE: removed bg-gy-canvas so the header is truly over the hero image
       >
         {/* Skip link for keyboard users */}
         <a
@@ -36,7 +37,10 @@ export default function RootLayout({
 
         <div className="min-h-dvh flex flex-col">
           <Header />
-          <main className="flex-1 pt-24 md:pt-28">{children}</main>
+          {/* IMPORTANT: no top padding here; the hero handles its own -mt-16 pt-16 */}
+          <main className="flex-1">
+            {children}
+          </main>
           <Footer />
         </div>
       </body>
