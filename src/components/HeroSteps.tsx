@@ -148,8 +148,10 @@ function usePrefersReducedMotion() {
     addListener: (listener: (e: MediaQueryListEvent) => void) => void;
     removeListener: (listener: (e: MediaQueryListEvent) => void) => void;
   };
+
+  // Removed `any` by narrowing to LegacyMQL for the property check
   const isLegacy = (m: MediaQueryList): m is LegacyMQL =>
-    "addListener" in m && typeof (m as any).addListener === "function";
+    "addListener" in m && typeof (m as LegacyMQL).addListener === "function";
 
   useEffect(() => {
     if (typeof window === "undefined") return;
