@@ -2,161 +2,166 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-type HeroStepsProps = {
-  steps: string[];
+/**
+ * One-time hero sequence:
+ * 0: show A + titleA (light background)  -> header text = dark
+ * 1: crossfade to B + show titleB        -> header text flips to white mid-fade
+ * 2: final composite (A base + B semi-opaque) with both lines visible -> white header
+ */
+
+type Props = {
+  srcA?: string;
+  srcB?: string;
+  titleA?: string;
+  titleB?: string;
   dwellMs?: number;
-  wipeMs?: number;
+  fadeMs?: number;
+  finalOverlayOpacity?: number;
 };
 
 export default function HeroSteps({
-  steps,
+  srcA = "/image/hero-Imagination.png",
+  srcB = "/image/hero-Knowledge.png",
+  titleA = "Imagination is more important than knowledge.",
+  titleB = "—because knowledge has its limits.",
   dwellMs = 2200,
-  wipeMs = 700,
-}: HeroStepsProps) {
+  fadeMs = 700,
+  finalOverlayOpacity = 0.65,
+}: Props) {
   const reduceMotion = usePrefersReducedMotion();
-  const [index, setIndex] = useState(0);
-  const [wiping, setWiping] = useState(false);
 
-  const nextIndex = (index + 1) % steps.length;
+  // phases: 0=A, 1=crossfade to B, 2=final composite
+  const [phase, setPhase] = useState<0 | 1 | 2>(reduceMotion ? 2 : 0);
 
-  // Timeline: dwell → wipe → swap
   useEffect(() => {
     if (reduceMotion) return;
-    const dwell = window.setTimeout(() => setWiping(true), dwellMs);
-    const swap = window.setTimeout(() => {
-      setIndex((i) => (i + 1) % steps.length);
-      setWiping(false);
-    }, dwellMs + wipeMs + 60);
+    const toPhase1 = window.setTimeout(() => setPhase(1), dwellMs);
+    const toPhase2 = window.setTimeout(
+      () => setPhase(2),
+      dwellMs + fadeMs + dwellMs
+    );
     return () => {
-      window.clearTimeout(dwell);
-      window.clearTimeout(swap);
+      window.clearTimeout(toPhase1);
+      window.clearTimeout(toPhase2);
     };
-  }, [index, reduceMotion, steps.length, dwellMs, wipeMs]);
+  }, [reduceMotion, dwellMs, fadeMs]);
 
-  const textToShow = useMemo(
-    () => (reduceMotion ? steps[steps.length - 1] : steps[index]),
-    [reduceMotion, steps, index]
-  );
+  // Header color (dark during phase 0, light from mid-fade onward)
+  useEffect(() => {
+    const root = document.documentElement;
+    root.setAttribute("data-hdr", "dark");
+    if (reduceMotion) {
+      root.setAttribute("data-hdr", "light");
+      return;
+    }
+    const switchAt = dwellMs + Math.max(0, Math.floor(fadeMs / 2));
+    const tFlip = window.setTimeout(
+      () => root.setAttribute("data-hdr", "light"),
+      switchAt
+    );
+    return () => window.clearTimeout(tFlip);
+  }, [reduceMotion, dwellMs, fadeMs]);
+
+  const showB = phase >= 1;
+  const final = phase === 2;
+
+  const opacityA = 1;
+  const opacityB = final ? finalOverlayOpacity : showB ? 1 : 0;
+
+  const showTitleA = phase === 0 || phase === 2;
+  const showTitleB = phase >= 1;
+
+  // >>> Only change: headline color on the very first image (phase 0) <<<
+  const titleAColor = final
+    ? "text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.65)]" // phase 2
+    : phase === 0
+    ? "text-[#094047]" // phase 0 (slightly deeper ink for contrast)
+    : "text-[#032834]"; // phase 1 (your original)
 
   return (
-    <section aria-label="Intro" className="gy-container pt-16 md:pt-24 pb-8 md:pb-12">
-      <div className="relative overflow-hidden rounded-2xl">
-        {/* Background A — Imagination */}
-        <Image
-          src="/images/hero-imagination.jpg" /* place file in public/images */
-          alt=""
-          fill
-          priority={false}
-          className={`object-cover transition-opacity duration-700 ${
-            wiping ? "opacity-0" : "opacity-100"
-          }`}
-        />
+    <section
+      aria-label="Intro"
+      className={[
+        "relative left-1/2 right-1/2 ml-[-50vw] mr-[-50vw] w-screen",
+        "min-h-[70vh] md:min-h-[75vh] lg:min-h-[80vh]",
+        "flex items-center overflow-x-clip",
+      ].join(" ")}
+    >
+      {/* Base image A */}
+      <Image
+        src={srcA}
+        alt=""
+        fill
+        priority={false}
+        className="object-cover -z-10 transition-opacity duration-700 ease-in-out"
+        style={{ opacity: opacityA }}
+      />
 
-        {/* Background B — Knowledge */}
-        <Image
-          src="/images/hero-knowledge.jpg" /* place file in public/images */
-          alt=""
-          fill
-          priority={false}
-          className={`object-cover transition-opacity duration-700 ${
-            wiping ? "opacity-100" : "opacity-0"
-          }`}
-        />
+      {/* Overlay image B */}
+      <Image
+        src={srcB}
+        alt=""
+        fill
+        priority={false}
+        className="object-cover -z-10 transition-opacity duration-700 ease-in-out"
+        style={{ opacity: opacityB }}
+      />
 
-        {/* Optional veil for readability */}
-        <div className="pointer-events-none absolute inset-0 bg-gy-canvas/35" />
+      {/* Copy */}
+      <div className="relative z-10 gy-container px-4 md:px-6 text-right">
+        {/* Title A */}
+        <h1
+          className={[
+            "text-3xl md:text-5xl font-semibold tracking-tight leading-tight",
+            "motion-safe:transition-opacity motion-safe:duration-500",
+            showTitleA ? "opacity-100" : "opacity-0",
+            titleAColor,
+          ].join(" ")}
+        >
+          {titleA}
+        </h1>
 
-        {/* TEXT + EFFECT LAYER */}
-        <div className="relative z-10">
-          {/* Current line (top-right, exact color #032834) */}
-          <h1
-            className={[
-              "text-3xl md:text-5xl font-semibold tracking-tight",
-              "motion-safe:transition-opacity motion-safe:duration-500",
-              "ml-auto text-right pr-3 md:pr-8",
-              "text-[#032834]",
-              wiping ? "opacity-0" : "opacity-100",
-            ].join(" ")}
-          >
-            {textToShow}
-          </h1>
-
-          {/* Next line fades in while wipe runs (right-aligned for continuity) */}
-          {!reduceMotion && (
-            <div
-              className={[
-                "absolute inset-0 flex items-start justify-end pr-3 md:pr-8",
-                "motion-safe:transition-opacity motion-safe:duration-500",
-                wiping ? "opacity-100 delay-150" : "opacity-0",
-              ].join(" ")}
-              aria-hidden="true"
-            >
-              <h2 className="text-3xl md:text-5xl font-semibold tracking-tight text-gy-900 text-right">
-                {steps[nextIndex]}
-              </h2>
-            </div>
-          )}
-
-          {/* Wash overlay (same color as canvas) */}
-          {!reduceMotion && (
-            <div
-              aria-hidden="true"
-              className={[
-                "pointer-events-none absolute inset-0 bg-gy-canvas transform -translate-x-full",
-                "motion-safe:transition-transform",
-              ].join(" ")}
-              style={{
-                transitionDuration: `${wipeMs}ms`,
-                transform: wiping ? "translateX(0)" : "translateX(-100%)",
-              }}
-            />
-          )}
-        </div>
+        {/* Title B */}
+        <p
+          className={[
+            "mt-3 md:mt-4 max-w-3xl text-lg md:text-xl",
+            "motion-safe:transition-opacity motion-safe:duration-500",
+            showTitleB ? "opacity-100" : "opacity-0",
+            "text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.65)]",
+          ].join(" ")}
+        >
+          {titleB}
+        </p>
       </div>
-
-      <p className="mt-4 max-w-2xl text-gy-700">
-        The next step replaces the last—clean, quick, and measurable.
-      </p>
     </section>
   );
 }
 
-/** Detect prefers-reduced-motion (no ts-expect-error, proper cleanup) */
+/** prefers-reduced-motion */
 function usePrefersReducedMotion() {
   const [prefers, setPrefers] = useState(false);
   const mq = useRef<MediaQueryList | null>(null);
 
-  // Type guard for legacy MediaQueryList API
   type LegacyMQL = MediaQueryList & {
     addListener: (listener: (e: MediaQueryListEvent) => void) => void;
     removeListener: (listener: (e: MediaQueryListEvent) => void) => void;
   };
   const isLegacy = (m: MediaQueryList): m is LegacyMQL =>
-    // @ts-ignore - TS 5.x doesn’t narrow on "in" for DOM mixins reliably
     "addListener" in m && typeof (m as any).addListener === "function";
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-
     mq.current = window.matchMedia("(prefers-reduced-motion: reduce)");
     const mql = mq.current;
-
-    const update = (e?: MediaQueryListEvent) => {
+    const update = (e?: MediaQueryListEvent) =>
       setPrefers(typeof e?.matches === "boolean" ? e.matches : mql.matches);
-    };
-
-    // init
     update();
-
-    // Modern listener
     if (typeof mql.addEventListener === "function") {
       mql.addEventListener("change", update);
       return () => mql.removeEventListener("change", update);
     }
-
-    // Legacy listener (Safari < 14)
     if (isLegacy(mql)) {
       mql.addListener(update);
       return () => mql.removeListener(update);

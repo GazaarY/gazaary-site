@@ -1,54 +1,36 @@
 /* ================================
-   Tailwind layers
+   Tailwind layers (MUST be first)
    ================================ */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ================================
-   GazaarY base tokens & defaults
+   Base tokens & resets
    ================================ */
 @layer base {
-  /* Keep native UI in light mode (your choice) */
-  html {
-    color-scheme: light;
-  }
+  html { color-scheme: light; }
+  html, body { margin: 0; padding: 0; }
+  img, video, canvas { display: block; }
 
-  /* Page text + AA smoothing (let layout.tsx control background) */
-  body {
-    /* removed bg-paper-50 so bg-gy-canvas from <body class="..."> applies */
-    @apply text-gy-800 antialiased;
-  }
+  /* body text (bg is set in layout.tsx) */
+  body { @apply text-gy-800 antialiased; }
 
-  /* Headings slightly darker than body */
-  h1,
-  h2,
-  h3,
-  h4 {
-    @apply text-gy-900;
-  }
+  /* headings */
+  h1, h2, h3, h4 { @apply text-gy-900; }
 
-  /* Muted/secondary copy */
-  small,
-  .muted {
-    @apply text-gy-600;
-  }
+  /* muted text */
+  small, .muted { @apply text-gy-600; }
 
-  /* Hairline dividers */
-  hr {
-    @apply border-hairline;
-  }
+  /* hairline divider */
+  hr { @apply border-hairline; }
 
-  /**
-   * Content-only links:
-   * Apply `.gy-prose` on any content container (article/markdown)
-   * so only “content links” get underlined—navigation/brand links stay clean.
-   */
+  /* “content links” (not nav) */
   .gy-prose a {
     @apply text-gy-700 hover:text-gy-900 underline underline-offset-4 decoration-gy-300;
   }
 
-  /* Global keyboard-focus styling (visible only on keyboard navigation) */
+  /* keyboard focus ring */
   a:focus-visible,
   button:focus-visible,
   [role="button"]:focus-visible,
@@ -59,8 +41,6 @@
     outline: 2px solid theme("colors.accent.400", #34d399);
     outline-offset: 2px;
   }
-
-  /* Remove legacy focus ring when not keyboard-initiated */
   a:focus:not(:focus-visible),
   button:focus:not(:focus-visible),
   [role="button"]:focus:not(:focus-visible),
@@ -70,80 +50,60 @@
   summary:focus:not(:focus-visible) {
     outline: none;
   }
+
+  /* -------- header theming via data-hdr attribute -------- */
+  /* When <html data-hdr="light"> … header text is light-on-dark */
+  html[data-hdr="light"] .hdr-fg { color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.35); }
+  html[data-hdr="dark"]  .hdr-fg { color: rgb(17 24 39); } /* gy-900 */
+  .hdr-fg { transition: color .35s ease, text-shadow .35s ease; }
+
+  /* -------- page mute via data-muted (set by Header on scroll) -------- */
+  /* Smooth transition for content containers */
+  main, section, .gy-card {
+    transition: filter .25s ease, opacity .25s ease;
+  }
+  /* Slight desaturation + lower opacity so the fixed header pops */
+  :root[data-muted] main {
+    filter: saturate(0.85) contrast(0.98);
+    opacity: 0.92;
+  }
 }
 
 /* ================================
-   Reusable primitives (header/footer/sections)
+   Reusable components
    ================================ */
 @layer components {
-  /* Page container: same width/padding everywhere */
-  .gy-container {
-    @apply container mx-auto max-w-[1100px] px-4 md:px-6;
-  }
+  .gy-container { @apply container mx-auto max-w-[1100px] px-4 md:px-6; }
 
-  /* Brand (site title/logo) — never underlined */
-  .gy-brand {
-    @apply no-underline hover:no-underline text-gy-900 font-semibold tracking-tight;
-  }
+  .gy-brand { @apply no-underline hover:no-underline font-semibold tracking-tight; }
+  .gy-navlink { @apply no-underline underline-offset-4 decoration-gy-300; }
+  .gy-navlink:hover { @apply underline; }
+  .gy-navlink[aria-current="page"] { @apply font-semibold; }
 
-  /* Header nav links: no underline by default, underline on hover */
-  .gy-navlink {
-    @apply no-underline text-gy-700 hover:text-gy-900 underline-offset-4 decoration-gy-300;
-  }
-  .gy-navlink:hover {
-    @apply underline;
-  }
-  .gy-navlink[aria-current="page"] {
-    @apply text-gy-900;
-  }
+  .gy-link { @apply text-gy-700 hover:text-gy-900 underline underline-offset-4 decoration-gy-300; }
 
-  /* Generic link you can use anywhere (same tone as .gy-prose a) */
-  .gy-link {
-    @apply text-gy-700 hover:text-gy-900 underline underline-offset-4 decoration-gy-300;
-  }
-
-  /* Primary button */
   .gy-btn {
     @apply inline-flex items-center justify-center rounded-md px-4 py-2
            text-sm font-medium bg-gy-900 text-white hover:bg-gy-800 transition;
   }
+  .gy-btn--ghost { @apply bg-transparent text-gy-900 hover:text-gy-800 border border-gy-300; }
 
-  /* Ghost button */
-  .gy-btn--ghost {
-    @apply bg-transparent text-gy-900 hover:text-gy-800 border border-gy-300;
-  }
+  .gy-card { @apply rounded-2xl border border-hairline bg-white shadow-sm; }
 
-  /* Card (used for little pills/hero and general cards) */
-  .gy-card {
-    @apply rounded-2xl border border-hairline bg-white shadow-sm;
-  }
-
-  /**
-   * Optional helper: .skip-link
-   * You can apply this class to the skip link instead of inline styles if you prefer.
-   * It stays off-screen until focused (keyboard Tab), then slides into view.
-   */
   .skip-link {
     @apply fixed left-4 top-4 z-[100] rounded-md bg-white px-3 py-2 shadow text-gy-900;
     transform: translateY(-200%);
     transition: transform 150ms ease;
   }
-  .skip-link:focus-visible {
-    transform: translateY(0);
-  }
+  .skip-link:focus-visible { transform: translateY(0); }
 }
 
 /* ================================
    Motion & scrolling
    ================================ */
-html:focus-within {
-  scroll-behavior: smooth;
-}
-
+html:focus-within { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) {
-  html:focus-within {
-    scroll-behavior: auto;
-  }
+  html:focus-within { scroll-behavior: auto; }
   * {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
@@ -152,6 +112,6 @@ html:focus-within {
 }
 
 /* ================================
-   Sticky-header anchor offset (fallback)
+   Anchor offset
    ================================ */
-:target { scroll-margin-top: 7rem; } /* ~112px under the sticky header */
+:target { scroll-margin-top: 7rem; }
