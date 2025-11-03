@@ -1,12 +1,13 @@
 // src/components/KOASection.tsx
 "use client";
 
+import type { CSSProperties } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 type Mode = "benefits" | "features";
 
 /** Allow CSS custom props on style objects (for --spin) */
-type CSSVars = React.CSSProperties & { ["--spin"]?: string };
+type CSSVars = CSSProperties & Record<`--${string}`, string | undefined>;
 
 /**
  * KOA Section
@@ -168,8 +169,8 @@ function Table({
 
   useEffect(() => {
     if (prevMode.current !== mode) {
-      // Benefits => rotate +180°  (clockwise half-turn)
-      // Features  => rotate -180° (counter-clockwise half-turn)
+      // Benefits => rotate +120° (clockwise)
+      // Features  => rotate -120° (counter-clockwise)
       setSpinDeg((d) => d + (mode === "benefits" ? 120 : -120));
       prevMode.current = mode;
     }
@@ -296,7 +297,7 @@ function Table({
         // position + follow the orbit rotation
         const orbitTransform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) rotate(var(--spin))`;
         // keep card upright
-        const upright = { transform: "rotate(calc(var(--spin) * -1))" as any };
+        const upright = { transform: "rotate(calc(var(--spin) * -1))" };
 
         return active ? (
           <div
@@ -391,7 +392,7 @@ function BookAtPlate({
   title: string;
   desc: string;
   onClose: () => void;
-  uprightStyle: React.CSSProperties;
+  uprightStyle: CSSProperties;
 }) {
   const [open, setOpen] = useState(false);
   useEffect(() => {
@@ -504,7 +505,7 @@ function Plate({
 }: {
   label: string;
   orbitTransform: string;
-  uprightStyle: React.CSSProperties;
+  uprightStyle: CSSProperties;
   active: boolean;
   onClick: () => void;
   ariaLabel: string;
