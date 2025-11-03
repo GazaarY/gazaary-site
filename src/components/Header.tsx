@@ -16,11 +16,23 @@ const FIRST_DARK_DELAY_MS = 2200;
 
 export default function Header() {
   const [open, setOpen] = useState(false);
+  const [prefersReduced, setPrefersReduced] = useState(false);
+
   const panelRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
   const headerRef = useRef<HTMLElement>(null);
 
   const activeId = useActiveSection(NAV.map((n) => n.id));
+
+  // Respect reduced motion
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const apply = () => setPrefersReduced(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
 
   // Initial brand/ink color handoff (dark -> light after hero animation)
   useLayoutEffect(() => {
@@ -78,7 +90,7 @@ export default function Header() {
         el.getBoundingClientRect().bottom > vh * 0.25;
 
       const heroOn = isOn(hero);
-      const koaOn  = isOn(koa);
+      const koaOn = isOn(koa);
       apply(heroOn, koaOn);
     };
     check();
@@ -139,6 +151,10 @@ export default function Header() {
   const focusRing =
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 rounded-md";
 
+  // Helpers to disable motion when users prefer reduced motion
+  const durSm = prefersReduced ? "duration-0" : "duration-200";
+  const durMd = prefersReduced ? "duration-0" : "duration-250";
+
   return (
     <>
       <script
@@ -158,6 +174,9 @@ export default function Header() {
         }
         section[aria-label="Intro"] { filter:none !important; opacity:1 !important; }
         main, main section { transition: filter .25s ease, opacity .25s ease; }
+        @media (prefers-reduced-motion: reduce) {
+          main, main section { transition: none !important; }
+        }
         html[data-muted] main section:not([aria-label="Intro"]) {
           filter: saturate(0.85) contrast(0.98);
           opacity: 0.92;
@@ -166,6 +185,9 @@ export default function Header() {
           background-color: transparent;
           border-bottom: 1px solid transparent;
           transition: background-color .25s ease, border-color .25s ease, backdrop-filter .25s ease;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .gy-header { transition: none !important; }
         }
         html[data-header-solid="true"] .gy-header {
           background-color: rgba(15, 23, 42, 0.85);
@@ -177,6 +199,9 @@ export default function Header() {
           text-decoration: none; 
           underline-offset: 4px; 
           transition: opacity .2s ease, color .2s ease, text-shadow .2s ease; 
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .hdr-link { transition: none !important; }
         }
         html[data-hdr="light"] .hdr-link:hover { opacity: .9; text-decoration: underline; }
         html[data-hdr="dark"]  .hdr-link:hover  { color: rgb(17 24 39 / .80); text-decoration: underline; }
@@ -230,14 +255,15 @@ export default function Header() {
               "hdr-ink border-white/40 hover:bg-white/10",
               focusRing,
               "overflow-hidden p-2 relative",
+              prefersReduced ? "duration-0" : "duration-150",
             ].join(" ")}
           >
             <svg width="24" height="16" viewBox="0 0 24 16" aria-hidden="true"
-              className={`${open ? "opacity-0" : "opacity-100"} transition-opacity duration-150 block`}>
+              className={`${open ? "opacity-0" : "opacity-100"} transition-opacity ${prefersReduced ? "duration-0" : "duration-150"} block`}>
               <path d="M2 3H22 M2 8H22 M2 13H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
             <svg width="24" height="16" viewBox="0 0 24 16" aria-hidden="true"
-              className={`${open ? "opacity-100" : "opacity-0"} transition-opacity duration-150 absolute inset-0 m-auto block`}>
+              className={`${open ? "opacity-100" : "opacity-0"} transition-opacity ${prefersReduced ? "duration-0" : "duration-150"} absolute inset-0 m-auto block`}>
               <path d="M5 3 L19 13 M19 3 L5 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </button>
@@ -249,7 +275,8 @@ export default function Header() {
           ref={panelRef}
           role="dialog"
           aria-modal={open ? "true" : undefined}
-          className={`sm:hidden overflow-hidden transition-[max-height,opacity] duration-200 ${
+          aria-hidden={!open}
+          className={`sm:hidden overflow-hidden transition-[max-height,opacity] ${durSm} ${
             open ? "max-h-40 opacity-100" : "max-h-0 opacity-0"
           }`}
           style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
