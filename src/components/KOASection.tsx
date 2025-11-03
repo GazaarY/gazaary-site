@@ -163,15 +163,26 @@ function Table({
     [labels]
   );
 
-  // ── Rotation state (in degrees) ──────────────────────────────────────────
+  // ── Rotation state (in degrees)
   const [spinDeg, setSpinDeg] = useState(0);
   const prevMode = useRef<Mode>("benefits");
 
+  // NEW: respect prefers-reduced-motion (freeze rotation)
+  const reduceMotionRef = useRef(false);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      reduceMotionRef.current = window
+        .matchMedia("(prefers-reduced-motion: reduce)")
+        .matches;
+    }
+  }, []);
+
   useEffect(() => {
     if (prevMode.current !== mode) {
-      // Benefits => rotate +120° (clockwise)
-      // Features  => rotate -120° (counter-clockwise)
-      setSpinDeg((d) => d + (mode === "benefits" ? 120 : -120));
+      if (!reduceMotionRef.current) {
+        // Benefits => rotate +120° (clockwise) / Features => -120°
+        setSpinDeg((d) => d + (mode === "benefits" ? 120 : -120));
+      }
       prevMode.current = mode;
     }
   }, [mode]);
@@ -199,7 +210,7 @@ function Table({
 
   return (
     <div
-      className="relative mx-auto aspect-square w-[82vw] max-w-[660px] md:w-auto"
+      className="relative mx-auto aspect-square w-[82vw] max-w-[660px] md:w-auto motion-reduce:[&_*]:!transition-none"
       ref={shellRef}
       style={{ ["--spin"]: `${spinDeg}deg` } as CSSVars}
     >
