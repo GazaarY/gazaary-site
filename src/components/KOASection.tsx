@@ -5,6 +5,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 type Mode = "benefits" | "features";
 
+/** Allow CSS custom props on style objects (for --spin) */
+type CSSVars = React.CSSProperties & { ["--spin"]?: string };
+
 /**
  * KOA Section
  * - Center pills remain.
@@ -166,7 +169,7 @@ function Table({
   useEffect(() => {
     if (prevMode.current !== mode) {
       // Benefits => rotate +180°  (clockwise half-turn)
-      // Features => rotate -180° (counter-clockwise half-turn)
+      // Features  => rotate -180° (counter-clockwise half-turn)
       setSpinDeg((d) => d + (mode === "benefits" ? 120 : -120));
       prevMode.current = mode;
     }
@@ -197,13 +200,7 @@ function Table({
     <div
       className="relative mx-auto aspect-square w-[82vw] max-w-[660px] md:w-auto"
       ref={shellRef}
-      style={
-        {
-          // shared CSS angle var used for rotation + counter-rotation
-          // @ts-ignore – custom property
-          "--spin": `${spinDeg}deg`,
-        } as React.CSSProperties
-      }
+      style={{ ["--spin"]: `${spinDeg}deg` } as CSSVars}
     >
       {/* SMART ROUND LAZY SUSAN — visual layers only (rotates with --spin) */}
       <div
