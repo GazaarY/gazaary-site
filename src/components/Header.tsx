@@ -44,56 +44,34 @@ export default function Header() {
     return () => window.clearTimeout(t);
   }, []);
 
-  // ===== Sticky/Muting behavior =====
-  // Keep your existing "muted" timing exactly the same,
-  // but make header transparent ONLY over the Intro/Hero.
+  // ===== Sticky behavior (NO muting) =====
   useEffect(() => {
     const root = document.documentElement;
     const hero = document.querySelector<HTMLElement>('section[aria-label="Intro"]');
-    const koa = document.querySelector<HTMLElement>("#koa");
-    if (!hero && !koa) return;
+    if (!hero) return;
 
-    // helper: apply current states
-    const apply = (heroOn: boolean, koaOn: boolean) => {
-      // HEADER: transparent only when HERO is visible
+    const setSolid = (heroOn: boolean) => {
       if (heroOn) root.removeAttribute("data-header-solid");
       else root.setAttribute("data-header-solid", "true");
-
-      // MUTED: unchanged from your current behavior (hero OR koa keeps it unmuted)
-      if (heroOn || koaOn) root.removeAttribute("data-muted");
-      else root.setAttribute("data-muted", "true");
     };
 
-    const state = new Map<Element, boolean>();
     const onObserve = (entries: IntersectionObserverEntry[]) => {
-      for (const e of entries) state.set(e.target as Element, e.isIntersecting);
-      const heroOn = hero ? !!state.get(hero) : false;
-      const koaOn = koa ? !!state.get(koa) : false;
-      apply(heroOn, koaOn);
+      const e = entries[0];
+      setSolid(!!e?.isIntersecting);
     };
 
-    // Same comfortable band you already had
     const io = new IntersectionObserver(onObserve, {
-      rootMargin: "-25% 0px -45% 0px",
-      threshold: 0.15,
+      rootMargin: "-35% 0px -45% 0px",
+      threshold: 0.2,
     });
 
     hero && io.observe(hero);
-    koa && io.observe(koa);
 
     // Initial evaluation for SSR hydration offset
-    const check = () => {
-      const vh = window.innerHeight;
-      const isOn = (el?: HTMLElement | null) =>
-        !!el &&
-        el.getBoundingClientRect().top < vh * 0.75 &&
-        el.getBoundingClientRect().bottom > vh * 0.25;
-
-      const heroOn = isOn(hero);
-      const koaOn = isOn(koa);
-      apply(heroOn, koaOn);
-    };
-    check();
+    const vh = window.innerHeight;
+    const rect = hero.getBoundingClientRect();
+    const heroOn = rect.top < vh * 0.66 && rect.bottom > vh * 0.34;
+    setSolid(heroOn);
 
     return () => io.disconnect();
   }, []);
@@ -151,7 +129,6 @@ export default function Header() {
   const focusRing =
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400 rounded-md";
 
-  // Helpers to disable motion when users prefer reduced motion
   const durSm = prefersReduced ? "duration-0" : "duration-200";
   const durMd = prefersReduced ? "duration-0" : "duration-250";
 
@@ -172,15 +149,14 @@ export default function Header() {
           color: rgb(17 24 39);
           text-shadow:none;
         }
+
+        /* We keep smooth transitions but remove any 'muted' styling */
         section[aria-label="Intro"] { filter:none !important; opacity:1 !important; }
         main, main section { transition: filter .25s ease, opacity .25s ease; }
         @media (prefers-reduced-motion: reduce) {
           main, main section { transition: none !important; }
         }
-        html[data-muted] main section:not([aria-label="Intro"]) {
-          filter: saturate(0.85) contrast(0.98);
-          opacity: 0.92;
-        }
+
         .gy-header {
           background-color: transparent;
           border-bottom: 1px solid transparent;
@@ -205,12 +181,14 @@ export default function Header() {
         }
         html[data-hdr="light"] .hdr-link:hover { opacity: .9; text-decoration: underline; }
         html[data-hdr="dark"]  .hdr-link:hover  { color: rgb(17 24 39 / .80); text-decoration: underline; }
+
+        /* Active link styling (no heavy weight) */
         html:not([data-header-solid="true"]) .hdr-link[aria-current="page"] { 
-          font-weight: 600; 
+          font-weight: inherit; 
           text-decoration: none; 
         }
         html[data-header-solid="true"] .hdr-link[aria-current="page"] { 
-          font-weight: 600; 
+          font-weight: inherit; 
           text-decoration: underline; 
         }
       `}</style>
@@ -252,18 +230,28 @@ export default function Header() {
             onClick={() => setOpen((v) => !v)}
             className={[
               "sm:hidden inline-flex items-center justify-center w-9 h-9 rounded-md border transition",
-              "hdr-ink border-white/40 hover:bg-white/10",
+              "hdr-ink border-white/40 hover:bg白/10".replace("白", "white"),
               focusRing,
               "overflow-hidden p-2 relative",
               prefersReduced ? "duration-0" : "duration-150",
             ].join(" ")}
           >
-            <svg width="24" height="16" viewBox="0 0 24 16" aria-hidden="true"
-              className={`${open ? "opacity-0" : "opacity-100"} transition-opacity ${prefersReduced ? "duration-0" : "duration-150"} block`}>
+            <svg
+              width="24"
+              height="16"
+              viewBox="0 0 24 16"
+              aria-hidden="true"
+              className={`${open ? "opacity-0" : "opacity-100"} transition-opacity ${prefersReduced ? "duration-0" : "duration-150"} block`}
+            >
               <path d="M2 3H22 M2 8H22 M2 13H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
-            <svg width="24" height="16" viewBox="0 0 24 16" aria-hidden="true"
-              className={`${open ? "opacity-100" : "opacity-0"} transition-opacity ${prefersReduced ? "duration-0" : "duration-150"} absolute inset-0 m-auto block`}>
+            <svg
+              width="24"
+              height="16"
+              viewBox="0 0 24 16"
+              aria-hidden="true"
+              className={`${open ? "opacity-100" : "opacity-0"} transition-opacity ${prefersReduced ? "duration-0" : "duration-150"} absolute inset-0 m-auto block`}
+            >
               <path d="M5 3 L19 13 M19 3 L5 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </button>
