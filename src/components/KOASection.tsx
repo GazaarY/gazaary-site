@@ -1,6 +1,7 @@
 // src/components/KOASection.tsx
 "use client";
 
+import Link from "next/link";
 import type { CSSProperties } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -104,19 +105,36 @@ export default function KOASection() {
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-4">
-              <a
-                href="#get-setup"
+              {/* Primary: real setup/onboarding (stub anchor for now) */}
+              <Link
+                href="/koa/get-setup"
                 className="inline-flex items-center justify-center rounded-xl px-5 py-3 text-base font-medium text-white shadow-sm transition hover:shadow md:px-6"
                 style={{ backgroundColor: "rgb(21 64 72)" }}
+                aria-label="Get setup for KOA"
+                prefetch={false}
               >
                 Get setup
-              </a>
-              <a
-                href="#watch-video"
+              </Link>
+
+              {/* NEW: demo CTA */}
+              <Link
+                href="/play/lazy-susan"
                 className="inline-flex items-center justify-center rounded-xl border px-5 py-3 text-base font-medium text-gy-900/80 backdrop-blur transition hover:bg-white md:px-6"
+                aria-label="Open KOA Lazy Susan demo"
+                prefetch={false}
+              >
+                Try demo
+              </Link>
+
+              {/* Tertiary: video (stub anchor for now) */}
+              <Link
+                href="/#watch-video"
+                className="inline-flex items-center justify-center rounded-xl border px-5 py-3 text-base font-medium text-gy-900/80 backdrop-blur transition hover:bg-white md:px-6"
+                aria-label="Watch KOA overview video"
+                prefetch={false}
               >
                 Watch video
-              </a>
+              </Link>
             </div>
           </div>
 
@@ -475,7 +493,7 @@ function BookAtPlate({
             lang="de"
             className="
               mx-auto max-w-[260px]
-              text-[15.5px] md:text-[16px]
+              text-[15.5px] md:text[16px]
               leading-[1.6]
               text-gy-800
               tracking-[0.003em]
