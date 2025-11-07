@@ -86,7 +86,7 @@ export default function KOASection() {
       {/* background rays */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-50 opacity-30 md:opacity-35 [mask-image:radial-gradient(60%_60%_at_70%_50%,black,transparent)]"
+        className="pointer-events-none absolute inset-0 -z-50 opacity-30 md:opacity-40 [mask-image:radial-gradient(60%_60%_at_70%_50%,black,transparent)]"
       >
         <Rays />
       </div>
@@ -185,7 +185,7 @@ function Table({
   const [spinDeg, setSpinDeg] = useState(0);
   const prevMode = useRef<Mode>("benefits");
 
-  // NEW: respect prefers-reduced-motion (freeze rotation)
+  // Respect prefers-reduced-motion (freeze rotation)
   const reduceMotionRef = useRef(false);
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -493,7 +493,7 @@ function BookAtPlate({
             lang="de"
             className="
               mx-auto max-w-[260px]
-              text-[15.5px] md:text[16px]
+              text-[15.5px] md:text-[16px]
               leading-[1.6]
               text-gy-800
               tracking-[0.003em]
@@ -574,9 +574,9 @@ function Rays() {
     <svg className="h-full w-full" viewBox="0 0 1200 800" preserveAspectRatio="none">
       <defs>
         <linearGradient id="ray" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="rgba(255,255,255,0.0)" />
-          <stop offset="0.5" stopColor="rgba(255,255,255,0.8)" />
-          <stop offset="1" stopColor="rgba(255,255,255,0.0)" />
+          <stop offset="0" stopColor="#ffffff" stopOpacity="0" />
+          <stop offset="0.5" stopColor="#ffffff" stopOpacity="0.8" />
+          <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
         </linearGradient>
       </defs>
       {Array.from({ length: 7 }).map((_, i) => {
