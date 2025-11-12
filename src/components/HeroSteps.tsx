@@ -1,174 +1,134 @@
 // src/components/HeroSteps.tsx
 "use client";
 
+import React, { useEffect, useRef, useState, type CSSProperties } from "react";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
 
-/**
- * One-time hero sequence:
- * 0: show A + titleA (light background)  -> header text = dark
- * 1: crossfade to B + show titleB        -> header text flips to white mid-fade
- * 2: final composite (A base + B semi-opaque) with both lines visible -> white header
- */
+type Phase = 0 | 1 | 2;
 
-type Props = {
-  srcA?: string;
-  srcB?: string;
+type HeroStepsProps = {
   titleA?: string;
   titleB?: string;
+  smokeSrc?: string;
+  brainSrc?: string;
   dwellMs?: number;
   fadeMs?: number;
-  finalOverlayOpacity?: number;
+  finalBrainOpacity?: number; // 0.3–0.4 ≈ 60–70% transparent
+  /** Reduce/limit hero height without touching page.tsx */
+  heightClamp?: string; // e.g. "clamp(480px,56vh,760px)"
 };
 
+/**
+ * 3-step hero motion
+ * 0) Smoke + Headline
+ * 1) Brain (full) + Sub-line only
+ * 2) Smoke main + Brain at ~30–40% + Headline + Sub-line (final, resting)
+ */
 export default function HeroSteps({
-  srcA = "/image/hero-Imagination.png",
-  srcB = "/image/hero-Knowledge.png",
   titleA = "Imagination is more important than knowledge.",
-  titleB = "—because knowledge has its limits.",
+  titleB = "— because knowledge has its limits.",
+  smokeSrc = "/assets/hero-smoke.png",
+  brainSrc = "/assets/hero-brain.png",
   dwellMs = 2200,
   fadeMs = 700,
-  finalOverlayOpacity = 0.65,
-}: Props) {
-  const reduceMotion = usePrefersReducedMotion();
-
-  // phases: 0=A, 1=crossfade to B, 2=final composite
-  const [phase, setPhase] = useState<0 | 1 | 2>(reduceMotion ? 2 : 0);
+  finalBrainOpacity = 0.28,
+  heightClamp = "clamp(540px,62vh,820px)",
+}: HeroStepsProps) {
+  const [phase, setPhase] = useState<Phase>(0);
+  const timers = useRef<number[]>([]);
 
   useEffect(() => {
-    if (reduceMotion) return;
-    const toPhase1 = window.setTimeout(() => setPhase(1), dwellMs);
-    const toPhase2 = window.setTimeout(
-      () => setPhase(2),
-      dwellMs + fadeMs + dwellMs
-    );
+    const t1 = window.setTimeout(() => setPhase(1), dwellMs);
+    const t2 = window.setTimeout(() => setPhase(2), dwellMs + fadeMs + dwellMs);
+    timers.current.push(t1, t2);
     return () => {
-      window.clearTimeout(toPhase1);
-      window.clearTimeout(toPhase2);
+      timers.current.forEach((id) => window.clearTimeout(id));
+      timers.current = [];
     };
-  }, [reduceMotion, dwellMs, fadeMs]);
-
-  // Header color (dark during phase 0, light from mid-fade onward)
-  useEffect(() => {
-    const root = document.documentElement;
-    root.setAttribute("data-hdr", "dark");
-    if (reduceMotion) {
-      root.setAttribute("data-hdr", "light");
-      return;
-    }
-    const switchAt = dwellMs + Math.max(0, Math.floor(fadeMs / 2));
-    const tFlip = window.setTimeout(
-      () => root.setAttribute("data-hdr", "light"),
-      switchAt
-    );
-    return () => window.clearTimeout(tFlip);
-  }, [reduceMotion, dwellMs, fadeMs]);
-
-  const showB = phase >= 1;
-  const final = phase === 2;
-
-  const opacityA = 1;
-  const opacityB = final ? finalOverlayOpacity : showB ? 1 : 0;
-
-  const showTitleA = phase === 0 || phase === 2;
-  const showTitleB = phase >= 1;
-
-  // >>> Only change: headline color on the very first image (phase 0) <<<
-  const titleAColor = final
-    ? "text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.65)]" // phase 2
-    : phase === 0
-    ? "text-[#094047]" // phase 0 (slightly deeper ink for contrast)
-    : "text-[#032834]"; // phase 1 (your original)
-
-  return (
-    <section
-      aria-label="Intro"
-      className={[
-        "relative left-1/2 right-1/2 ml-[-50vw] mr-[-50vw] w-screen",
-        "min-h-[70vh] md:min-h-[75vh] lg:min-h-[80vh]",
-        "flex items-center overflow-x-clip",
-      ].join(" ")}
-    >
-      {/* Base image A */}
-      <Image
-        src={srcA}
-        alt=""
-        fill
-        priority={false}
-        className="object-cover -z-10 transition-opacity duration-700 ease-in-out"
-        style={{ opacity: opacityA }}
-      />
-
-      {/* Overlay image B */}
-      <Image
-        src={srcB}
-        alt=""
-        fill
-        priority={false}
-        className="object-cover -z-10 transition-opacity duration-700 ease-in-out"
-        style={{ opacity: opacityB }}
-      />
-
-      {/* Copy */}
-      <div className="relative z-10 gy-container px-4 md:px-6 text-right">
-        {/* Title A */}
-        <h1
-          className={[
-            "text-3xl md:text-5xl font-semibold tracking-tight leading-tight",
-            "motion-safe:transition-opacity motion-safe:duration-500",
-            showTitleA ? "opacity-100" : "opacity-0",
-            titleAColor,
-          ].join(" ")}
-        >
-          {titleA}
-        </h1>
-
-        {/* Title B */}
-        <p
-          className={[
-            "mt-3 md:mt-4 max-w-3xl text-lg md:text-xl",
-            "motion-safe:transition-opacity motion-safe:duration-500",
-            showTitleB ? "opacity-100" : "opacity-0",
-            "text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.65)]",
-          ].join(" ")}
-        >
-          {titleB}
-        </p>
-      </div>
-    </section>
-  );
-}
-
-/** prefers-reduced-motion */
-function usePrefersReducedMotion() {
-  const [prefers, setPrefers] = useState(false);
-  const mq = useRef<MediaQueryList | null>(null);
-
-  type LegacyMQL = MediaQueryList & {
-    addListener: (listener: (e: MediaQueryListEvent) => void) => void;
-    removeListener: (listener: (e: MediaQueryListEvent) => void) => void;
-  };
-
-  // Removed `any` by narrowing to LegacyMQL for the property check
-  const isLegacy = (m: MediaQueryList): m is LegacyMQL =>
-    "addListener" in m && typeof (m as LegacyMQL).addListener === "function";
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    mq.current = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const mql = mq.current;
-    const update = (e?: MediaQueryListEvent) =>
-      setPrefers(typeof e?.matches === "boolean" ? e.matches : mql.matches);
-    update();
-    if (typeof mql.addEventListener === "function") {
-      mql.addEventListener("change", update);
-      return () => mql.removeEventListener("change", update);
-    }
-    if (isLegacy(mql)) {
-      mql.addListener(update);
-      return () => mql.removeListener(update);
-    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return prefers;
+  // Image opacities per phase
+  const smokeOpacity = phase === 0 ? 1 : phase === 1 ? 0.18 : 1;
+  const brainOpacity =
+    phase === 0 ? 0 : phase === 1 ? 1 : Math.max(0, Math.min(1, finalBrainOpacity));
+
+  const transitionStyle: CSSProperties = {
+    transition: `opacity ${fadeMs}ms cubic-bezier(.22,.61,.36,1)`,
+  };
+
+  return (
+    <section aria-label="Intro" className="relative isolate leading-[0] m-0 p-0">
+      {/* Visual area */}
+      <div
+        className="relative w-full overflow-hidden"
+        style={{ height: heightClamp, minHeight: "540px", maxHeight: "880px" }}
+      >
+        {/* Safety backdrop if assets are missing */}
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(11,31,42,1)_0%,rgba(11,31,42,0.55)_38%,rgba(11,31,42,0.35)_70%,rgba(11,31,42,0.12)_100%)]" />
+
+        {/* Smoke base */}
+        <Image
+          src={smokeSrc}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="pointer-events-none block object-cover"
+          style={{ ...transitionStyle, opacity: smokeOpacity }}
+        />
+
+        {/* Brain overlay */}
+        <Image
+          src={brainSrc}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="pointer-events-none block object-cover"
+          style={{ ...transitionStyle, opacity: brainOpacity }}
+        />
+
+        {/* Top scrim so the (always-light) nav stays readable */}
+        <div className="absolute inset-x-0 top-0 h-24 md:h-28 bg-gradient-to-b from-[rgba(11,31,42,0.85)] to-transparent" />
+
+        {/* Headline "cloud" for Phase 0 only */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div
+            className={`pointer-events-none rounded-[9999px] blur-2xl
+                        bg-[radial-gradient(ellipse_at_center,rgba(11,31,42,0.55)_0%,rgba(11,31,42,0.45)_26%,rgba(11,31,42,0.25)_48%,rgba(11,31,42,0.12)_66%,transparent_76%)]
+                        w-[68vw] max-w-[1100px] h-[26vh] md:h-[28vh] -translate-y-[2vh] z-[5]
+                        ${phase === 0 ? "opacity-100" : "opacity-0"}`}
+            style={transitionStyle}
+          />
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 mx-auto flex h-full max-w-7xl items-center justify-center px-6 text-center">
+          <div className="w-full">
+            {/* Headline (0 & 2) */}
+            <h1
+              style={transitionStyle}
+              className={`mx-auto max-w-6xl text-3xl md:text-6xl font-semibold leading-tight text-white drop-shadow
+                          ${phase === 1 ? "opacity-0" : "opacity-100"}`}
+            >
+              {titleA}
+            </h1>
+
+            {/* Sub-line (1 & 2) */}
+            <p
+              style={transitionStyle}
+              className={`mx-auto mt-4 max-w-3xl text-lg md:text-2xl text-white/90
+                          ${phase === 0 ? "opacity-0" : "opacity-100"}`}
+            >
+              {titleB}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Soft seam removed to kiss KOA */}
+      <div aria-hidden={true} className="pointer-events-none h-0 w-full" />
+    </section>
+  );
 }
