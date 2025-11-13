@@ -1,6 +1,7 @@
 // src/components/KOASection.tsx
 "use client";
 
+import Link from "next/link";
 import type { CSSProperties } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -85,7 +86,7 @@ export default function KOASection() {
       {/* background rays */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-50 opacity-30 md:opacity-35 [mask-image:radial-gradient(60%_60%_at_70%_50%,black,transparent)]"
+        className="pointer-events-none absolute inset-0 -z-50 opacity-30 md:opacity-40 [mask-image:radial-gradient(60%_60%_at_70%_50%,black,transparent)]"
       >
         <Rays />
       </div>
@@ -104,19 +105,36 @@ export default function KOASection() {
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-4">
-              <a
-                href="#get-setup"
+              {/* Primary: real setup/onboarding (stub anchor for now) */}
+              <Link
+                href="/koa/get-setup"
                 className="inline-flex items-center justify-center rounded-xl px-5 py-3 text-base font-medium text-white shadow-sm transition hover:shadow md:px-6"
                 style={{ backgroundColor: "rgb(21 64 72)" }}
+                aria-label="Get setup for KOA"
+                prefetch={false}
               >
                 Get setup
-              </a>
-              <a
-                href="#watch-video"
+              </Link>
+
+              {/* NEW: demo CTA */}
+              <Link
+                href="/play/lazy-susan"
                 className="inline-flex items-center justify-center rounded-xl border px-5 py-3 text-base font-medium text-gy-900/80 backdrop-blur transition hover:bg-white md:px-6"
+                aria-label="Open KOA Lazy Susan demo"
+                prefetch={false}
+              >
+                Try demo
+              </Link>
+
+              {/* Tertiary: video (stub anchor for now) */}
+              <Link
+                href="/#watch-video"
+                className="inline-flex items-center justify-center rounded-xl border px-5 py-3 text-base font-medium text-gy-900/80 backdrop-blur transition hover:bg-white md:px-6"
+                aria-label="Watch KOA overview video"
+                prefetch={false}
               >
                 Watch video
-              </a>
+              </Link>
             </div>
           </div>
 
@@ -167,7 +185,7 @@ function Table({
   const [spinDeg, setSpinDeg] = useState(0);
   const prevMode = useRef<Mode>("benefits");
 
-  // NEW: respect prefers-reduced-motion (freeze rotation)
+  // Respect prefers-reduced-motion (freeze rotation)
   const reduceMotionRef = useRef(false);
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -556,9 +574,9 @@ function Rays() {
     <svg className="h-full w-full" viewBox="0 0 1200 800" preserveAspectRatio="none">
       <defs>
         <linearGradient id="ray" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="rgba(255,255,255,0.0)" />
-          <stop offset="0.5" stopColor="rgba(255,255,255,0.8)" />
-          <stop offset="1" stopColor="rgba(255,255,255,0.0)" />
+          <stop offset="0" stopColor="#ffffff" stopOpacity="0" />
+          <stop offset="0.5" stopColor="#ffffff" stopOpacity="0.8" />
+          <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
         </linearGradient>
       </defs>
       {Array.from({ length: 7 }).map((_, i) => {
