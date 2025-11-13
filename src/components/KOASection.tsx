@@ -93,48 +93,49 @@ export default function KOASection() {
 
       <div className="mx-auto max-w-7xl px-6 pt-20 pb-32 md:pt-28 md:pb-44">
         <div className="grid items-center gap-12 lg:grid-cols-2">
-          {/* LEFT: copy + CTAs */}
+          {/* LEFT: copy + CTAs (updated styles only) */}
           <div className="relative z-10">
-            <h2 className="text-4xl font-semibold tracking-tight text-gy-900 md:text-5xl">
-              KitchenOpsAtelier
-            </h2>
+            <div className="mx-auto max-w-3xl">
+              <h2 className="text-[36px] md:text-6xl font-semibold tracking-tight text-[#0b1f2a]">
+                KitchenOpsAtelier
+              </h2>
 
-            <p className="mt-4 max-w-prose text-lg leading-relaxed text-gy-700">
-              Klar. Ordnung. Aktion. Dein Mise-en-Place für saubere Abläufe,
-              ruhigen Kopf und konstante Lieferung.
-            </p>
+              <p className="mt-4 text-slate-600 text-base md:text-lg leading-relaxed">
+                Klar. Ordnung. Aktion. Dein Mise-en-Place für saubere Abläufe, ruhigen
+                Kopf und konstante Lieferung.
+              </p>
 
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              {/* Primary: real setup/onboarding (stub anchor for now) */}
-              <Link
-                href="/koa/get-setup"
-                className="inline-flex items-center justify-center rounded-xl px-5 py-3 text-base font-medium text-white shadow-sm transition hover:shadow md:px-6"
-                style={{ backgroundColor: "rgb(21 64 72)" }}
-                aria-label="Get setup for KOA"
-                prefetch={false}
-              >
-                Get setup
-              </Link>
+              <div className="mt-6 flex flex-wrap gap-4">
+                {/* Primary */}
+                <Link
+                  href="/koa/get-setup"
+                  className="inline-flex items-center rounded-xl bg-emerald-700 px-5 py-2.5 text-white shadow-md shadow-emerald-900/10 hover:bg-emerald-800 active:translate-y-[1px] transition md:px-6"
+                  aria-label="Get setup for KOA"
+                  prefetch={false}
+                >
+                  Get setup
+                </Link>
 
-              {/* NEW: demo CTA */}
-              <Link
-                href="/play/lazy-susan"
-                className="inline-flex items-center justify-center rounded-xl border px-5 py-3 text-base font-medium text-gy-900/80 backdrop-blur transition hover:bg-white md:px-6"
-                aria-label="Open KOA Lazy Susan demo"
-                prefetch={false}
-              >
-                Try demo
-              </Link>
+                {/* Secondary (ghost) */}
+                <Link
+                  href="/play/lazy-susan"
+                  className="inline-flex items-center rounded-xl bg-white px-5 py-2.5 text-slate-900 ring-1 ring-black/10 hover:bg-slate-50 active:translate-y-[1px] transition md:px-6"
+                  aria-label="Open KOA Lazy Susan demo"
+                  prefetch={false}
+                >
+                  Try demo
+                </Link>
 
-              {/* Tertiary: video (stub anchor for now) */}
-              <Link
-                href="/#watch-video"
-                className="inline-flex items-center justify-center rounded-xl border px-5 py-3 text-base font-medium text-gy-900/80 backdrop-blur transition hover:bg-white md:px-6"
-                aria-label="Watch KOA overview video"
-                prefetch={false}
-              >
-                Watch video
-              </Link>
+                {/* Tertiary (dark) */}
+                <Link
+                  href="/#watch-video"
+                  className="inline-flex items-center rounded-xl bg-slate-700 px-5 py-2.5 text-white hover:bg-slate-800 shadow-sm active:translate-y-[1px] transition md:px-6"
+                  aria-label="Watch KOA overview video"
+                  prefetch={false}
+                >
+                  Watch video
+                </Link>
+              </div>
             </div>
           </div>
 
