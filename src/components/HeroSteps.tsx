@@ -4,23 +4,30 @@
 import React, { useEffect, useRef, useState, type CSSProperties } from "react";
 import Image from "next/image";
 
-// Static imports so Vercel bundles the assets
-import smokeImg from "@/../public/assets/hero-smoke.png";
-import brainImg from "@/../public/assets/hero-brain.png";
+// Use static imports so Vercel bundles them (no path/caching misses).
+// Relative path from src/components → ../../public/assets/*
+import smokeImg from "../../public/assets/hero-smoke.png";
+import brainImg from "../../public/assets/hero-brain.png";
 
 type Phase = 0 | 1 | 2;
 
 type HeroStepsProps = {
   titleA?: string;
   titleB?: string;
-  smokeSrc?: string;   // optional override
-  brainSrc?: string;   // optional override
+  smokeSrc?: string;      // optional override
+  brainSrc?: string;      // optional override
   dwellMs?: number;
   fadeMs?: number;
-  finalBrainOpacity?: number;
-  heightClamp?: string; // e.g. "clamp(480px,56vh,760px)"
+  finalBrainOpacity?: number; // e.g. 0.28
+  heightClamp?: string;       // e.g. "clamp(480px,56vh,760px)"
 };
 
+/**
+ * 3-step hero motion:
+ * 0) Smoke + Headline
+ * 1) Brain (full) + Sub-line only
+ * 2) Smoke main + Brain at ~30–40% + Headline + Sub-line (final)
+ */
 export default function HeroSteps({
   titleA = "Imagination is more important than knowledge.",
   titleB = "— because knowledge has its limits.",
